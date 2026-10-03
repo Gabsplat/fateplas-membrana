@@ -1,33 +1,37 @@
-# Fateplas · Cada capa cuenta
+# Fateplas · Membranas a medida para su prensa
 
-## Variante de materiales y movimiento
+## Variante centrada en la membrana
 
-Rama `experience-material`, creada desde `redesign-industrial` en un worktree separado, `/home/gabsplat/Programming/Fateplas/web-experience`. La copia de `../web` conserva su rama y sus archivos. Esta variante se publica en [GitHub Pages, /fateplas-experience/](https://gabsplat.github.io/fateplas-experience/), desde el repositorio independiente [Gabsplat/fateplas-experience](https://github.com/Gabsplat/fateplas-experience).
+Rama `experience-membrana`, creada desde `experience-material` en un worktree separado, `/home/gabsplat/Programming/Fateplas/web-membrana`. Las copias `../web` y `../web-experience` conservan sus ramas y sus archivos. Esta variante se publica en [GitHub Pages, /fateplas-membrana/](https://gabsplat.github.io/fateplas-membrana/), desde el repositorio independiente [Gabsplat/fateplas-membrana](https://github.com/Gabsplat/fateplas-membrana); el remoto `membrana` apunta a ese repositorio y su rama `main` recibe `experience-membrana`.
 
-Vista local: [Omarchy, puerto 22443](https://omarchy.tailff08b5.ts.net:22443/). El servicio temporal `fateplas-experience-preview.service` sirve `out/` en `127.0.0.1:4324`. El servicio dura hasta que se detenga o se reinicie la máquina. El formulario de esta vista es un placeholder, sin envío ni persistencia.
+Vista local: [Omarchy, puerto 25443](https://omarchy.tailff08b5.ts.net:25443/). El servicio temporal `fateplas-membrana-preview.service` sirve `out/` en `127.0.0.1:4326` y dura hasta que se detenga o se reinicie la máquina. El formulario de esta vista es un placeholder, sin envío ni persistencia; los enlaces de correo y teléfono sí funcionan.
 
-El hero presenta un estudio conceptual de material flexible con WebGPU y [vgpu 0.5 de Vercel Labs](https://github.com/vercel-labs/vgpu). Sus shaders WGSL producen cuatro efectos: luz rasante con el cursor, relieve y microsombras del tejido, láminas flexibles que se ensamblan y separan, y un barrido bordó al seleccionar una capa. Cubierta, Matriz y Soporte corresponden a poliéster, PVC y poliéster tejido. La escena usa geometría teselada, profundidad y MSAA4; se carga cuando entra en pantalla y limita la densidad a 1,5. Las dependencias de esta copia están instaladas por separado.
+La página no explica cómo funciona una membrana: quien llega ya la está buscando. Todo apunta a probar que esta es buena. El diseño es solo claro y de lenguaje industrial: papel y acero, filetes negros, rótulos en monoespaciada, titulares en mayúsculas y el rosa de la marca como único acento. `globals.css` está escrito para esta variante.
 
-El ciclo dura 12 segundos y el cursor usa un resorte. El renderer se detiene fuera de pantalla, al ocultar la pestaña y al pausar; con movimiento reducido presenta una vista estática abierta. La selección por teclado es inmediata. Si WebGPU no está disponible o falla el dispositivo, se muestra la escena SVG.
+El hero tiene unos pocos hilos en canvas (`FabricField.tsx`) que ondulan despacio, como pliegues de tela, y se inclinan apenas hacia el cursor; el titular "Membranas hechas para aguantar" y una placa con las cuatro cifras de la ficha. Tiene un botón de pausa; con movimiento reducido los hilos quedan quietos.
 
-La sección "La diferencia está adentro" reutiliza el diagrama de la copia local del rediseño anterior, con una presentación técnica clara y una ficha conectada a la capa seleccionada. Se puede explorar desde las superficies del corte, sus puntos o la leyenda. La imagen original permanece completa e inmóvil; los resaltados y el barrido de luz son superposiciones SVG. La ficha muestra material, función y especificación, y ocupa un lugar fijo en móvil. Escape vuelve a la cubierta; teclado, pausa y movimiento reducido suprimen las animaciones.
+El corte (`LayerInspector.tsx`) presenta la imagen original `membrane-layers.png` como un plano. La imagen queda entera e inmóvil. Al recorrerla, una cruz marca la posición y la capa bajo el cursor se destaca: el resto se atenúa, su contorno se dibuja y una línea la une con la ficha. Las etiquetas 01 a 03 y las pestañas fijan la capa; las flechas del teclado cambian de pestaña. La ficha muestra la cifra principal y las propiedades publicadas en el sitio original.
 
-El film local de 12 segundos anima tres fotografías ya presentes en el proyecto, con una banda sonora sintetizada y silenciada por defecto. No es una filmación de la planta de Fateplas. Se puede regenerar con `python scripts/make-material-film.py`, que requiere ffmpeg. El MP4 pesa aproximadamente 1,6 MB. El selector prepara la consulta con la marca y el modelo, y conserva un mensaje o nombre que el visitante ya haya escrito.
+El banco de pruebas (`TestBench.tsx`) tiene un ensayo por capa: mantener presionado hasta 7,8 MPa, tirar de la trama de 1100 dTex y subir la temperatura hasta 60 °C. Son simulaciones interactivas de los valores de la ficha del material, no mediciones. Al superar las tres, el contador invita a cotizar. Cada ensayo se puede completar con teclado.
 
-Referencias de diseño: [Hardware Operations](https://hardwareoperations.com/) y [Teenage Engineering](https://teenage.engineering/). Movimiento basado en [Good vs Great Animations de Emil Kowalski](https://emilkowal.ski/ui/good-vs-great-animations), las skills locales de Emil y la documentación de Motion.
+Siguen el respaldo (garantía, certificación, fabricación a medida y kit), el testimonio y la lista de clientes (`ClientWall.tsx`), con los nombres del sitio original; la cifra "más de 140" se calcula de esa lista.
+
+El cotizador (`QuoteBuilder.tsx`) redacta la consulta con la marca, el modelo, la necesidad y la zona, y la deja en el formulario contiguo sin pisar un mensaje escrito a mano. El mismo texto alimenta el enlace de correo. En móvil una barra fija lleva al cotizador.
+
+De la variante `experience-material` no quedan la escena WebGPU, el diagrama de capas, la película, el acordeón ni la dependencia `vgpu`. Los archivos `tests/site.spec.ts`, `interactions.spec.ts`, `redesign.spec.ts` y `pages.spec.ts` pertenecen a variantes anteriores y no cubren esta página.
 
 Para compilar y comprobar esta variante:
 
 ```sh
 FATEPLAS_PROJECT_ROOT=/home/gabsplat/Programming/Fateplas PAGES_BASE_PATH='' node scripts/build-pages.mjs
-TEST_BASE_URL=http://127.0.0.1:4324 CHROMIUM_PATH=/usr/bin/chromium node node_modules/@playwright/test/cli.js test tests/experience.spec.ts tests/membrane.spec.ts tests/material-diagram.spec.ts
+TEST_BASE_URL=http://127.0.0.1:4326 CHROMIUM_PATH=/usr/bin/chromium node node_modules/@playwright/test/cli.js test tests/experience.spec.ts
 ```
 
 Para detener solo esta vista:
 
 ```sh
-systemctl --user stop fateplas-experience-preview.service
-tailscale serve --https=22443 off
+systemctl --user stop fateplas-membrana-preview.service
+tailscale serve --https=25443 off
 ```
 
 ## Antecedentes de la versión base

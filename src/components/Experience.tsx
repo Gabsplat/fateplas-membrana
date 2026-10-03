@@ -1,72 +1,73 @@
 "use client";
 
 import Image from "next/image";
-import {
-  AnimatePresence,
-  motion,
-  useScroll,
-  useSpring,
-  useTransform,
-} from "motion/react";
+import { motion, useScroll, useSpring, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { withBasePath } from "@/lib/base-path";
 import { useReducedMotionPreference } from "@/lib/use-reduced-motion";
-import MembraneScene from "./MembraneScene";
-import MaterialDiagram from "./MaterialDiagram";
-import ContactForm from "./ContactForm";
-import Accordion from "./Accordion";
+import FabricField from "./FabricField";
+import TestBench from "./TestBench";
+import LayerInspector from "./LayerInspector";
+import ClientWall, { all, clientCount } from "./ClientWall";
+import QuoteBuilder, { initialQuote, type Quote } from "./QuoteBuilder";
 import content from "./content.json";
 
-const ease = [0.23, 1, 0.32, 1] as const;
-const layers = [
-  { name: "Cubierta", material: "Poliéster" },
-  { name: "Matriz", material: "PVC" },
-  { name: "Soporte", material: "Poliéster tejido" },
+const figures = [
+  { value: "7,8 MPa", label: "Resistencia hidrostática mínima" },
+  { value: "1100 dTex", label: "Trama de fibra mínima" },
+  { value: "60 °C", label: "Temperatura máxima" },
+  { value: "1 año", label: "Garantía de fabricación y material" },
 ];
-const machines = [
-  {
-    brand: "Bucher Vaslin",
-    title: "Bucher XPert",
-    image: "Bucher_XPert.png",
-    width: 584,
-    height: 394,
-  },
-  {
-    brand: "Della Toffola",
-    title: "Della Toffola",
-    image: "Della-Toffola.png",
-    width: 630,
-    height: 405,
-  },
-  {
-    brand: "Diemme",
-    title: "Diemme Velvet T26",
-    image: "Diemme-Velvet_T26.png",
-    width: 689,
-    height: 424,
-  },
-];
-const brands = [
-  "Buccolini",
-  "Bucher Vaslin",
-  "Defranceschi",
-  "Della Toffola",
-  "Diemme",
-  "Pera",
-  "Siprem",
-  "Velo",
-  "Willmes",
-  "Otra marca",
-];
-const clients = [
+const logos = [
   { image: "GrupoPeniaflor-1.svg", name: "Grupo Peñaflor" },
   { image: "Fecovita.png", name: "Fecovita" },
   { image: "Baggio.png", name: "Baggio" },
   { image: "Senetiner.svg", name: "Nieto Senetiner" },
   { image: "Takeda.svg", name: "Takeda" },
 ];
+const rows = [all.slice(0, 22), all.slice(30, 52)];
+const backing = [
+  {
+    figure: "1 año",
+    title: "Garantía",
+    text: "Cubre fallas de fabricación o de material desde el día de la entrega.",
+  },
+  {
+    figure: "Sin ftalatos",
+    title: "Apta para alimentos",
+    text: "Tela certificada por el Centro de Investigaciones Toxicológicas S.A. Cumple la resolución Mercosur GMC Nº 32/10.",
+  },
+  {
+    figure: "A medida",
+    title: "Para su prensa",
+    text: "Tomamos las dimensiones y la fabricamos, aunque el repuesto original ya no se consiga.",
+  },
+  {
+    figure: "Kit",
+    title: "De reparación",
+    text: "Cubre un corte o una rajadura pequeña sin reemplazar la membrana.",
+  },
+];
+const steps = [
+  {
+    title: "Consulta",
+    text: "Nos indica la marca y el modelo de su prensa. Cotizamos la membrana para ese equipo.",
+  },
+  {
+    title: "Medición",
+    text: "Tomamos las medidas sin cargo en el Gran Mendoza. Desde otras zonas puede enviarnos la membrana a reemplazar.",
+  },
+  {
+    title: "Fabricación",
+    text: "Con una seña del 50 % comenzamos a fabricar su membrana a medida.",
+  },
+  {
+    title: "Entrega",
+    text: "Despacho gratis en el Gran Mendoza, con manual de uso y 1 año de garantía.",
+  },
+];
 
-function Arrow({ diagonal = false }: { diagonal?: boolean }) {
+function Arrow() {
   return (
     <svg
       width="20"
@@ -75,178 +76,15 @@ function Arrow({ diagonal = false }: { diagonal?: boolean }) {
       fill="none"
       aria-hidden="true"
     >
-      <path
-        d={diagonal ? "M5 19 19 5M5 5h14v14" : "M4 12h15m-6-6 6 6-6 6"}
-        stroke="currentColor"
-        strokeWidth="1.6"
-      />
+      <path d="M4 12h15m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.6" />
     </svg>
-  );
-}
-
-function Film({
-  paused,
-  muted,
-  className = "",
-}: {
-  paused: boolean;
-  muted: boolean;
-  className?: string;
-}) {
-  const ref = useRef<HTMLVideoElement>(null);
-  const reduced = useReducedMotionPreference();
-  useEffect(() => {
-    const video = ref.current;
-    if (!video) return;
-    let visible = true;
-    const sync = () => {
-      if (paused || reduced || !visible || document.hidden) video.pause();
-      else void video.play().catch(() => {});
-    };
-    const observer = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
-      sync();
-    });
-    observer.observe(video);
-    document.addEventListener("visibilitychange", sync);
-    sync();
-    return () => {
-      observer.disconnect();
-      document.removeEventListener("visibilitychange", sync);
-      video.pause();
-    };
-  }, [paused, reduced]);
-  return (
-    <video
-      ref={ref}
-      className={className}
-      loop
-      muted={muted}
-      playsInline
-      preload="metadata"
-      poster={withBasePath("/media/material-film-poster.jpg")}
-      aria-label="Película de imágenes industriales y bodegas"
-    >
-      <source src={withBasePath("/media/material-film.mp4")} type="video/mp4" />
-    </video>
-  );
-}
-
-function PressSelector({
-  onQuote,
-}: {
-  onQuote: (brand: string, model: string) => void;
-}) {
-  const [brand, setBrand] = useState("Bucher Vaslin");
-  const [model, setModel] = useState("");
-  const [instant, setInstant] = useState(false);
-  const reduced = useReducedMotionPreference();
-  const machine = machines.find((item) => item.brand === brand);
-  return (
-    <div className="press-selector">
-      <div className="press-visual">
-        <div className="press-circle" aria-hidden="true" />
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            className="press-image"
-            key={brand}
-            initial={{
-              opacity: 0,
-              transform: instant || reduced ? "none" : "translateX(22px)",
-            }}
-            animate={{ opacity: 1, transform: "translateX(0px)" }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: instant || reduced ? 0 : 0.22, ease }}
-          >
-            {machine ? (
-              <Image
-                src={withBasePath(`/images/${machine.image}`)}
-                width={machine.width}
-                height={machine.height}
-                alt={`Prensa ${machine.title}`}
-                sizes="(max-width: 800px) 85vw, 45vw"
-              />
-            ) : (
-              <div className="custom-press">
-                <svg viewBox="0 0 360 220" aria-hidden="true">
-                  <path
-                    d="M50 55h255v112H50zM50 55c-45 0-45 112 0 112M305 55c45 0 45 112 0 112M80 167v34m185-34v34M28 88h24m251 0h24M65 56v110"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                </svg>
-                <span>Fabricación a medida</span>
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
-        <div className="press-caption">
-          <span>{machine?.title || brand}</span>
-          <span>Prensa neumática</span>
-        </div>
-      </div>
-      <div className="press-controls">
-        <p className="selector-intro">Encuentre su repuesto</p>
-        <h3>¿Con qué prensa trabaja?</h3>
-        <div
-          className="brand-options"
-          role="group"
-          aria-label="Marca de su prensa"
-        >
-          {brands.map((item) => (
-            <button
-              type="button"
-              key={item}
-              className={
-                brand === item ? "brand-option selected" : "brand-option"
-              }
-              aria-pressed={brand === item}
-              onClick={(event) => {
-                setInstant(event.detail === 0);
-                setBrand(item);
-              }}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-        <label className="model-label" htmlFor="press-model">
-          Modelo de la prensa <span>Opcional</span>
-        </label>
-        <input
-          id="press-model"
-          value={model}
-          onChange={(event) => setModel(event.target.value)}
-          maxLength={100}
-          placeholder="Por ejemplo, XPert 50"
-        />
-        <p className="selector-note">
-          Si no conoce el modelo, podemos asesorarlo.
-        </p>
-        <a
-          href="#contacto"
-          className="button button-dark"
-          onClick={() => onQuote(brand, model)}
-        >
-          Consultar por esta membrana <Arrow />
-        </a>
-      </div>
-    </div>
   );
 }
 
 export default function Experience() {
   const [paused, setPaused] = useState(false);
-  const [muted, setMuted] = useState(true);
-  const [heroView, setHeroView] = useState<"material" | "film">("material");
-  const [heroActiveLayer, setHeroActiveLayer] = useState(0);
-  const [inspectionKey, setInspectionKey] = useState(0);
-  const [inspectionInstant, setInspectionInstant] = useState(false);
-  const [suggestedMessage, setSuggestedMessage] = useState("");
-  const [filmOpen, setFilmOpen] = useState(false);
-  const [filmPaused, setFilmPaused] = useState(false);
-  const dialog = useRef<HTMLDialogElement>(null);
+  const [quote, setQuote] = useState<Quote>(initialQuote);
+  const [dock, setDock] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotionPreference();
   const { scrollYProgress } = useScroll();
@@ -276,24 +114,25 @@ export default function Experience() {
       .forEach((element) => observer.observe(element));
     return () => observer.disconnect();
   }, []);
+  // The quote dock appears once the hero is gone and steps aside while the
+  // quote itself is on screen.
   useEffect(() => {
-    if (!filmOpen || !dialog.current) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    dialog.current.showModal();
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, [filmOpen]);
-  const closeFilm = () => {
-    dialog.current?.close();
-    setFilmOpen(false);
-  };
-  const inspectLayer = (index: number, keyboard: boolean) => {
-    setHeroActiveLayer(index);
-    setInspectionInstant(keyboard || still);
-    setInspectionKey((key) => key + 1);
-  };
+    const node = root.current;
+    const hero = node?.querySelector("#inicio");
+    const target = node?.querySelector("#cotizar");
+    if (!hero || !target) return;
+    const seen = new Map<Element, boolean>([
+      [hero, true],
+      [target, false],
+    ]);
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => seen.set(entry.target, entry.isIntersecting));
+      setDock(!seen.get(hero) && !seen.get(target));
+    });
+    observer.observe(hero);
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div ref={root} className="experience" data-paused={still}>
@@ -311,195 +150,102 @@ export default function Experience() {
           <span className="wordmark-dot" />
         </a>
         <nav aria-label="Navegación principal">
-          <a href="#materiales">El material</a>
-          <a href="#productos">Su prensa</a>
-          <a href="#nosotros">Fateplas</a>
+          <a href="#materiales">El corte</a>
+          <a href="#pruebas">Pruebas</a>
+          <a href="#respaldo">Respaldo</a>
+          <a href="#clientes">Clientes</a>
         </nav>
-        <a href="#contacto" className="header-contact">
-          Hablemos <Arrow diagonal />
+        <a href="#cotizar" className="header-quote">
+          Cotizar <Arrow />
         </a>
       </header>
       <main id="contenido">
-        <section
-          className="experience-hero"
-          id="inicio"
-          aria-labelledby="hero-title"
-        >
-          <div className="hero-meta">
-            <span>Membranas para prensas</span>
-            <span>Mendoza, Argentina</span>
+        <section className="hero" id="inicio" aria-labelledby="hero-title">
+          <FabricField paused={still} />
+          <div className="hero-top">
+            <span className="label">
+              Membranas para prensas neumáticas e hidroneumáticas
+            </span>
+            <button
+              type="button"
+              className="hero-pause"
+              aria-label={
+                paused ? "Reanudar animaciones" : "Pausar animaciones"
+              }
+              aria-pressed={paused}
+              onClick={() => setPaused(!paused)}
+            >
+              {paused ? "▷" : "Ⅱ"}
+            </button>
           </div>
-          <div className="hero-composition">
-            <div className="hero-copy">
-              <h1 id="hero-title">
-                <span className="headline-mask">
-                  <span>Cada capa</span>
+          <div className="hero-body">
+            <h1 id="hero-title">
+              <span className="headline-mask">
+                <span>Membranas</span>
+              </span>
+              <span className="headline-mask">
+                <span>hechas para</span>
+              </span>
+              <span className="headline-mask">
+                <span>
+                  <em>aguantar.</em>
                 </span>
-                <span className="headline-mask">
-                  <span>cuenta.</span>
-                </span>
-              </h1>
-              <p className="hero-summary">
-                Su producción necesita una membrana que responda. La fabricamos
-                a la medida de su prensa.
+              </span>
+            </h1>
+            <div className="hero-side">
+              <p>
+                A medida para su prensa, con tela de calidad alimenticia
+                certificada y 1 año de garantía. No nos crea: póngala a prueba.
               </p>
               <div className="hero-actions">
-                <a href="#productos" className="button button-wine">
-                  Encontrar mi membrana <Arrow />
+                <a href="#cotizar" className="button button-wine">
+                  Cotizar mi membrana <Arrow />
                 </a>
-                <button
-                  type="button"
-                  className="film-link"
-                  onClick={() => {
-                    setFilmPaused(false);
-                    setFilmOpen(true);
-                  }}
-                >
-                  <span className="play-icon" aria-hidden="true">
-                    ▷
-                  </span>
-                  Ver película<span className="film-duration">0:12</span>
-                </button>
+                <a href="#pruebas" className="hero-secondary">
+                  Ponerla a prueba <span aria-hidden="true">↓</span>
+                </a>
               </div>
             </div>
-            <div className="hero-media">
-              <div className="hero-stage">
-                <div
-                  className="hero-visual"
-                  id="hero-material-scene"
-                  data-view={heroView}
-                >
-                  {heroView === "material" ? (
-                    <MembraneScene
-                      paused={still || filmOpen}
-                      activeLayer={heroActiveLayer}
-                      inspectionKey={inspectionKey}
-                      inspectionInstant={inspectionInstant}
-                    />
-                  ) : (
-                    <Film
-                      paused={still || filmOpen}
-                      muted={muted}
-                      className="hero-film"
-                    />
-                  )}
-                </div>
-                <div className="hero-stage-top">
-                  <span className="live-mark">
-                    <i />
-                    {heroView === "material"
-                      ? "El material, de cerca"
-                      : "Industria en movimiento"}
-                  </span>
-                  <button
-                    type="button"
-                    className="round-control"
-                    aria-label={
-                      paused ? "Reanudar animaciones" : "Pausar animaciones"
-                    }
-                    aria-pressed={paused}
-                    onClick={() => setPaused(!paused)}
-                  >
-                    {paused ? "▷" : "Ⅱ"}
-                  </button>
-                </div>
-                <div className="hero-stage-bottom">
-                  <div
-                    className="view-switch"
-                    role="group"
-                    aria-label="Vista del hero"
-                  >
-                    <button
-                      type="button"
-                      aria-pressed={heroView === "material"}
-                      onClick={() => setHeroView("material")}
-                    >
-                      Material
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={heroView === "film"}
-                      onClick={() => setHeroView("film")}
-                    >
-                      Industria
-                    </button>
-                  </div>
-                  {heroView === "film" ? (
-                    <button
-                      type="button"
-                      className="sound-control"
-                      aria-pressed={!muted}
-                      onClick={() => setMuted(!muted)}
-                    >
-                      {muted ? "Activar sonido" : "Silenciar"}
-                    </button>
-                  ) : (
-                    <span className="scene-hint">
-                      Mueva el cursor para explorar
-                    </span>
-                  )}
-                </div>
-              </div>
-              {heroView === "material" && (
-                <div
-                  className="hero-inspection"
-                  data-instant={inspectionInstant}
-                >
-                  <div className="hero-inspection-caption">
-                    <span>Explore una capa</span>
-                    <span aria-live={inspectionKey > 0 ? "polite" : "off"}>
-                      <span className="sr-only">
-                        {layers[heroActiveLayer].name}:{" "}
-                      </span>
-                      {layers[heroActiveLayer].material}
-                    </span>
-                  </div>
-                  <div
-                    className="hero-layer-controls"
-                    role="group"
-                    aria-label="Explorar las capas del material"
-                  >
-                    {layers.map((layer, index) => (
-                      <button
-                        type="button"
-                        key={layer.name}
-                        aria-pressed={heroActiveLayer === index}
-                        aria-controls="hero-material-scene"
-                        onClick={(event) =>
-                          inspectLayer(index, event.detail === 0)
-                        }
-                      >
-                        <span aria-hidden="true">0{index + 1}</span>
-                        {layer.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
-          <div className="hero-foot">
-            <span>Prensas neumáticas e hidroneumáticas</span>
-            <a href="#materiales">
-              Explore lo que hay adentro <span aria-hidden="true">↓</span>
-            </a>
-          </div>
+          <ul className="hero-figures">
+            {figures.map((figure) => (
+              <li key={figure.value}>
+                <strong>{figure.value}</strong>
+                {figure.label}
+              </li>
+            ))}
+          </ul>
+          <div className="hatch" aria-hidden="true" />
         </section>
         <section
-          className="client-strip"
+          className="trust"
           aria-label="Empresas que confían en Fateplas"
         >
-          <p>Parte de su producción.</p>
-          <div>
-            {clients.map((client) => (
-              <Image
-                key={client.name}
-                src={withBasePath(`/images/${client.image}`)}
-                alt={client.name}
-                width={160}
-                height={60}
-                sizes="(max-width: 600px) 100px, 140px"
-              />
+          <div className="trust-head">
+            <p>
+              Más de {clientCount} bodegas y empresas prensan con Fateplas.{" "}
+              <a href="#clientes">Ver la lista</a>
+            </p>
+            <div>
+              {logos.map((logo) => (
+                <Image
+                  key={logo.name}
+                  src={withBasePath(`/images/${logo.image}`)}
+                  alt={logo.name}
+                  width={160}
+                  height={60}
+                  sizes="(max-width: 600px) 100px, 140px"
+                />
+              ))}
+            </div>
+          </div>
+          <div className="trust-names" aria-hidden="true">
+            {rows.map((row, index) => (
+              <div key={index}>
+                {[...row, ...row].map((client, position) => (
+                  <span key={position}>{client.name}</span>
+                ))}
+              </div>
             ))}
           </div>
         </section>
@@ -509,18 +255,68 @@ export default function Experience() {
           aria-labelledby="material-title"
         >
           <div className="section-heading" data-reveal="heading">
-            <p>La composición importa</p>
+            <p>01 · El corte</p>
             <h2 id="material-title">
-              La diferencia
+              Tres capas.
               <br />
-              está adentro.
+              Ninguna de relleno.
             </h2>
             <div className="section-intro">
-              El corte original, de cerca. Seleccione un punto para conocer el
-              material y la función de cada capa.
+              Así es la tela por dentro. Recorra el corte o elija una capa para
+              leer su ficha.
             </div>
           </div>
-          <MaterialDiagram paused={still} />
+          <LayerInspector />
+        </section>
+        <section
+          id="pruebas"
+          className="bench-section section-space"
+          aria-labelledby="bench-title"
+        >
+          <div className="section-heading" data-reveal="heading">
+            <p>02 · Banco de pruebas</p>
+            <h2 id="bench-title">
+              No nos crea.
+              <br />
+              Pruébela.
+            </h2>
+            <div className="section-intro">
+              Tres ensayos interactivos, uno por capa, con los valores de la
+              ficha del material. Supere los tres.
+            </div>
+          </div>
+          <TestBench>
+            <a href="#cotizar" className="button button-wine">
+              Cotizar mi membrana <Arrow />
+            </a>
+          </TestBench>
+        </section>
+        <section
+          id="respaldo"
+          className="backing-section section-space"
+          aria-labelledby="backing-title"
+        >
+          <div className="section-heading" data-reveal="heading">
+            <p>03 · Respaldo</p>
+            <h2 id="backing-title">
+              Y si algo falla,
+              <br />
+              respondemos.
+            </h2>
+            <div className="section-intro">
+              Somos una empresa familiar de Mendoza. Sabemos lo que cuesta
+              detener una producción.
+            </div>
+          </div>
+          <ul className="backing">
+            {backing.map((item) => (
+              <li key={item.title}>
+                <strong>{item.figure}</strong>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </li>
+            ))}
+          </ul>
           <div className="certification">
             <Image
               src={withBasePath(
@@ -534,179 +330,131 @@ export default function Experience() {
               Tela de calidad alimenticia, aprobada y certificada por el Centro
               de Investigaciones Toxicológicas S.A.
             </p>
-            <span>Material apto para su industria</span>
+            <a
+              href="#cotizar"
+              className="text-link"
+              onClick={() => setQuote({ ...quote, need: "kit", touched: true })}
+            >
+              Consultar por un kit <Arrow />
+            </a>
           </div>
         </section>
-        <div className="type-ribbon" aria-hidden="true">
-          <div>
-            <span>Hecha para su prensa.</span>
-            <span>Lista para su producción.</span>
-            <span>Hecha para su prensa.</span>
-            <span>Lista para su producción.</span>
-          </div>
-        </div>
         <section
-          id="productos"
+          id="clientes"
+          className="clients-section section-space"
+          aria-labelledby="clients-title"
+        >
+          <figure className="testimonial" data-reveal="heading">
+            <blockquote>
+              &quot;Siempre le hemos comprado a Fateplas y no hemos tenido
+              ningún problema. Me gusta mucho la calidad de la membrana y el
+              servicio de atención. Se lo recomiendo a todos los colegas.&quot;
+            </blockquote>
+            <figcaption>
+              <Image
+                src={withBasePath("/images/Osvaldo-Colilaff.jpg")}
+                alt=""
+                width={140}
+                height={140}
+              />
+              <span>
+                Osvaldo Colilaf
+                <span>Compras y licitaciones, RPB S.A. Cuyo</span>
+              </span>
+            </figcaption>
+          </figure>
+          <div className="section-heading">
+            <p>04 · Clientes</p>
+            <h2 id="clients-title">
+              Más de {clientCount}
+              <br />
+              bodegas y empresas.
+            </h2>
+            <div className="section-intro">
+              De Mendoza a Salta, Neuquén y Uruguay. Busque una bodega que
+              conozca.
+            </div>
+          </div>
+          <ClientWall />
+        </section>
+        <section
+          id="cotizar"
           className="products-section section-space"
           aria-labelledby="product-title"
         >
           <div className="section-heading" data-reveal="heading">
-            <p>Repuestos y fabricación a medida</p>
+            <p>05 · Cotización en un minuto</p>
             <h2 id="product-title">
               Su prensa.
               <br />
               Nuestra membrana.
             </h2>
             <div className="section-intro">
-              Trabajamos con las marcas del mercado, incluso con equipos cuyos
-              repuestos originales ya no se consiguen.
+              Elija su equipo y le preparamos la consulta. Trabajamos todas las
+              marcas del mercado.
             </div>
           </div>
-          <PressSelector
-            onQuote={(brand, model) =>
-              setSuggestedMessage(
-                `Quisiera consultar por una membrana para una prensa ${brand}${model.trim() ? `, modelo ${model.trim()}` : ""}.`,
-              )
-            }
-          />
-        </section>
-        <section className="repair-section" aria-labelledby="repair-title">
-          <div className="repair-art" aria-hidden="true">
-            <div className="repair-sheet">
-              <span />
-              <span />
-              <i />
-            </div>
-          </div>
-          <div className="repair-copy" data-reveal="heading">
-            <p>También cuidamos lo que ya tiene</p>
-            <h2 id="repair-title">
-              Un pequeño corte.
-              <br />
-              Una solución a mano.
-            </h2>
-            <p>
-              Los kits de reparación permiten cubrir pequeños cortes o rajaduras
-              de la membrana y continuar con su producción.
-            </p>
-            <a
-              href="#contacto"
-              className="text-link"
-              onClick={() =>
-                setSuggestedMessage(
-                  "Quisiera consultar por un kit de reparación para mi membrana.",
-                )
-              }
-            >
-              Consultar por un kit <Arrow diagonal />
-            </a>
-          </div>
-        </section>
-        <section
-          id="nosotros"
-          className="about-section section-space"
-          aria-labelledby="about-title"
-        >
-          <div className="about-photo" data-reveal="image">
-            <Image
-              src={withBasePath(
-                "/images/simon-tartarotti-qcJUzFKLhF8-unsplash-scaled.jpg",
-              )}
-              alt="Viñedos de Mendoza"
-              width={2560}
-              height={1707}
-              sizes="(max-width: 800px) 100vw, 50vw"
-            />
-            <span>Mendoza, Argentina</span>
-          </div>
-          <div className="about-copy" data-reveal="heading">
-            <p>Fateplas de Vosso S.A.</p>
-            <h2 id="about-title">
-              Conocemos
-              <br />
-              sus tiempos.
-            </h2>
-            <p>
-              Somos una empresa familiar con experiencia en la industria de
-              alimentos y bebidas. Entendemos lo que significa detener una
-              producción.
-            </p>
-            <p>
-              Fabricamos membranas a medida y acompañamos a nuestros clientes
-              con asesoramiento y atención personalizada.
-            </p>
-            <a href="#contacto" className="text-link">
-              Hablemos de su equipo <Arrow diagonal />
-            </a>
-          </div>
-        </section>
-        <section
-          className="testimonial-section"
-          aria-labelledby="testimonial-title"
-        >
-          <Image
-            src={withBasePath("/images/Osvaldo-Colilaff.jpg")}
-            alt="Osvaldo Colilaf"
-            width={140}
-            height={140}
-          />
-          <div>
-            <h2 id="testimonial-title" className="sr-only">
-              La experiencia de nuestros clientes
-            </h2>
-            <blockquote>
-              &quot;El resultado del prensado al utilizar la membrana es muy
-              bueno.&quot;
-            </blockquote>
-            <p>
-              Osvaldo Colilaf
-              <span>Sector de compras y licitaciones, RPB S.A. Cuyo</span>
-            </p>
-          </div>
+          <QuoteBuilder quote={quote} onChange={setQuote} />
+          <ol className="process">
+            {steps.map((step, index) => (
+              <li key={step.title}>
+                <span aria-hidden="true">0{index + 1}</span>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+              </li>
+            ))}
+          </ol>
         </section>
         <section
           className="faq-section section-space"
           aria-labelledby="faq-title"
         >
           <div className="faq-heading">
-            <p>Antes de elegir</p>
+            <p>06 · Antes de elegir</p>
             <h2 id="faq-title">
               Las preguntas
               <br />
               que importan.
             </h2>
           </div>
-          <Accordion items={content.faq} variant="faq" id="faq" />
+          <div className="faq">
+            {content.faq.map((item, index) => (
+              <details key={item.title} name="faq">
+                <summary>
+                  <span aria-hidden="true">0{index + 1}</span>
+                  {item.title}
+                </summary>
+                <div>
+                  {item.paragraphs.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                  {item.list.length > 0 && (
+                    <ul>
+                      {item.list.map((point) => (
+                        <li key={point}>{point}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </details>
+            ))}
+          </div>
         </section>
-        <section
-          id="contacto"
-          className="contact-section section-space"
-          aria-labelledby="contact-title"
-        >
-          <div className="contact-heading" data-reveal="heading">
-            <p>Cuéntenos qué necesita</p>
-            <h2 id="contact-title">
-              Que su producción
-              <br />
-              siga adelante.
-            </h2>
+        <section className="closing-section" aria-labelledby="closing-title">
+          <p>Fabricación a medida, 1 año de garantía</p>
+          <h2 id="closing-title">
+            Que su producción
+            <br />
+            siga adelante.
+          </h2>
+          <div className="closing-actions">
+            <a href="#cotizar" className="button button-wine">
+              Cotizar mi membrana <Arrow />
+            </a>
+            <a href="tel:+542615114420">+54 261 5114420</a>
+            <a href="mailto:fateplas@yahoo.com.ar">fateplas@yahoo.com.ar</a>
           </div>
-          <div className="contact-grid">
-            <div className="contact-info">
-              <p>
-                Una membrana nueva, un kit o una consulta sobre su prensa.
-                Estamos para asesorarlo.
-              </p>
-              <a href="tel:+542615114420">+54 261 5114420</a>
-              <a href="mailto:fateplas@yahoo.com.ar">fateplas@yahoo.com.ar</a>
-              <address>
-                Independencia 70, Godoy Cruz
-                <br />
-                Mendoza, Argentina
-              </address>
-            </div>
-            <ContactForm suggestedMessage={suggestedMessage} />
-          </div>
+          <address>Independencia 70, Godoy Cruz, Mendoza, Argentina</address>
         </section>
       </main>
       <footer className="experience-footer">
@@ -719,54 +467,11 @@ export default function Experience() {
           <a href="#inicio">Volver arriba ↑</a>
         </div>
       </footer>
-      {filmOpen && (
-        <dialog
-          ref={dialog}
-          className="film-dialog"
-          aria-labelledby="film-title"
-          onCancel={closeFilm}
-          onClose={() => setFilmOpen(false)}
-          onClick={(event) => {
-            if (event.target === event.currentTarget) closeFilm();
-          }}
-        >
-          <div className="film-dialog-heading">
-            <h2 id="film-title">Material. Precisión. Producción.</h2>
-            <button
-              type="button"
-              className="round-control"
-              aria-label="Cerrar película"
-              onClick={closeFilm}
-            >
-              ×
-            </button>
-          </div>
-          <Film
-            paused={filmPaused || reduced}
-            muted={muted}
-            className="dialog-video"
-          />
-          <div className="film-dialog-footer">
-            <span>Una mirada a la industria y sus materiales.</span>
-            <div>
-              <button
-                type="button"
-                aria-pressed={filmPaused}
-                onClick={() => setFilmPaused(!filmPaused)}
-              >
-                {filmPaused ? "Reproducir" : "Pausar"}
-              </button>
-              <button
-                type="button"
-                aria-pressed={!muted}
-                onClick={() => setMuted(!muted)}
-              >
-                {muted ? "Activar sonido" : "Silenciar"}
-              </button>
-            </div>
-          </div>
-        </dialog>
-      )}
+      <div className="quote-dock" data-visible={dock} inert={!dock}>
+        <a href="#cotizar" className="button button-wine">
+          Cotizar mi membrana <Arrow />
+        </a>
+      </div>
     </div>
   );
 }

@@ -146,7 +146,7 @@ export default function ContactForm({
           id="contact-name"
           name="name"
           type="text"
-          placeholder="Ingresa tu nombre..."
+          placeholder="Su nombre"
           autoComplete="name"
           maxLength={CONTACT_LIMITS.name}
           required
@@ -172,7 +172,7 @@ export default function ContactForm({
           id="contact-email"
           name="email"
           type="email"
-          placeholder="Ingresa tu dirección de correo electrónico..."
+          placeholder="Su correo electrónico"
           autoComplete="email"
           maxLength={CONTACT_LIMITS.email}
           required
@@ -197,7 +197,7 @@ export default function ContactForm({
           className="contact-input contact-textarea"
           id="contact-message"
           name="message"
-          placeholder="Introduce aquí tu mensaje..."
+          placeholder="Cuéntenos qué necesita"
           maxLength={CONTACT_LIMITS.message}
           required
           disabled={status === "pending"}
@@ -244,7 +244,7 @@ export default function ContactForm({
         }
         disabled={status === "pending"}
       >
-        {status === "pending" ? "Enviando..." : "Enviar mensaje"}
+        {status === "pending" ? "Enviando..." : "Pedir cotización"}
       </button>
       <div
         className={`contact-status contact-status-${status}`}

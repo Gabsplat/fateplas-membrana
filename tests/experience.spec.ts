@@ -1,13 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-test("material, press selection and quote work without overwriting a draft", async ({
+test("the hero sells the membrane and the quote is written from the press selection", async ({
   page,
 }, testInfo) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Cada capa cuenta." }),
+    page.getByRole("heading", { name: "Membranas hechas para aguantar." }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Pausar animaciones", exact: true })
@@ -16,49 +16,45 @@ test("material, press selection and quote work without overwriting a draft", asy
     "data-paused",
     "true",
   );
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
-    ),
-  ).toBe(true);
   await page.screenshot({
-    path: `docs/reference/experience/hero-${testInfo.project.name}.png`,
+    path: `docs/reference/membrana/hero-${testInfo.project.name}.png`,
   });
-  await page
-    .locator("#materiales")
-    .getByRole("button", { name: "Matriz", exact: true })
-    .click();
-  await expect(page.getByText("7,8 MPa", { exact: true })).toBeVisible();
-  await page
-    .locator("#materiales")
-    .getByRole("button", { name: "Soporte", exact: true })
-    .click();
-  await expect(page.getByText("1100 dTex", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Diemme", exact: true }).click();
   await expect(
     page.getByRole("img", { name: "Prensa Diemme Velvet T26" }),
   ).toBeVisible();
   await page.getByLabel("Modelo de la prensa").fill("Velvet T26");
-  await page.getByRole("link", { name: "Consultar por esta membrana" }).click();
+  await page.getByRole("button", { name: "Gran Mendoza", exact: true }).click();
   await expect(page.locator("#contact-message")).toHaveValue(
-    "Quisiera consultar por una membrana para una prensa Diemme, modelo Velvet T26.",
+    "Quisiera cotizar una membrana para una prensa Diemme, modelo Velvet T26. Mi planta está en el Gran Mendoza.",
+  );
+  await expect(
+    page.getByText("Toma de medidas y despacho sin cargo."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Enviar por correo" }),
+  ).toHaveAttribute("href", /^mailto:fateplas@yahoo\.com\.ar\?.*Diemme/);
+  await page.getByRole("link", { name: "Consultar por un kit" }).click();
+  await expect(page.locator("#contact-message")).toHaveValue(
+    /^Quisiera consultar por un kit de reparación/,
   );
   await page.locator("#contact-name").fill("Mi nombre");
   await page.locator("#contact-message").fill("Mi consulta escrita a mano.");
   await page.getByRole("button", { name: "Willmes", exact: true }).click();
-  await page.getByRole("link", { name: "Consultar por esta membrana" }).click();
   await expect(page.locator("#contact-message")).toHaveValue(
     "Mi consulta escrita a mano.",
   );
   await expect(page.locator("#contact-name")).toHaveValue("Mi nombre");
   await page
-    .getByRole("button", { name: "Enviar mensaje", exact: true })
+    .getByRole("button", { name: "Pedir cotización", exact: true })
     .click();
   await expect(page.locator(".contact-form").getByRole("status")).toContainText(
     "Vista previa",
   );
-  await page.getByRole("button", { name: "¿Qué incluye el servicio?" }).click();
-  await expect(page.locator("#faq-answer-0")).toBeVisible();
+  await page.getByText("¿Qué incluye el servicio?").click();
+  await expect(
+    page.getByText("Toma de medidas y despacho gratis en el Gran Mendoza."),
+  ).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -67,82 +63,96 @@ test("material, press selection and quote work without overwriting a draft", asy
   expect(errors).toEqual([]);
 });
 
-test("film playback, mute, pause and dialog focus restoration", async ({
+test("the three bench tests can be passed and lead to the quote", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Industria", exact: true }).click();
-  const video = page.locator(".hero-film");
-  await expect
-    .poll(() =>
-      video.evaluate((element: HTMLVideoElement) => element.currentTime),
-    )
-    .toBeGreaterThan(0);
-  await page
-    .getByRole("button", { name: "Pausar animaciones", exact: true })
-    .click();
-  await expect
-    .poll(() => video.evaluate((element: HTMLVideoElement) => element.paused))
-    .toBe(true);
-  await page.getByRole("button", { name: "Ver película" }).click();
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible();
-  const film = dialog.locator("video");
-  await expect
-    .poll(() =>
-      film.evaluate((element: HTMLVideoElement) => element.currentTime),
-    )
-    .toBeGreaterThan(0);
-  await dialog
-    .getByRole("button", { name: "Activar sonido", exact: true })
-    .click();
-  await expect
-    .poll(() => film.evaluate((element: HTMLVideoElement) => element.muted))
-    .toBe(false);
-  await dialog.getByRole("button", { name: "Pausar", exact: true }).click();
-  await expect
-    .poll(() => film.evaluate((element: HTMLVideoElement) => element.paused))
-    .toBe(true);
-  await page.keyboard.press("Escape");
-  await expect(dialog).toHaveCount(0);
+  const bench = page.locator("#pruebas");
+  const result = bench.getByRole("status");
+  await expect(result).toContainText("0/3");
+  const hold = bench.getByRole("button", { name: "Mantenga presionado" });
+  await hold.scrollIntoViewIfNeeded();
+  await hold.dispatchEvent("pointerdown");
   await expect(
-    page.getByRole("button", { name: "Ver película" }),
-  ).toBeFocused();
+    bench.getByRole("button", { name: "Equivale a 78 bar" }),
+  ).toBeDisabled({ timeout: 6000 });
+  await expect(bench.getByText("7,8MPa")).toBeVisible();
+  await expect(result).toContainText("1/3");
+  await bench.getByRole("button", { name: "Tire de la tela" }).click();
+  await expect(result).toContainText("2/3");
+  await bench.getByRole("slider").fill("60");
+  await expect(result).toContainText("3/3");
+  await expect(result).toContainText("Tres de tres");
+  await expect(bench.locator("li[data-done=true]")).toHaveCount(3);
+  await bench.getByRole("link", { name: "Cotizar mi membrana" }).click();
+  await expect(page.locator("#cotizar")).toBeInViewport();
 });
 
-test("reduced motion keeps content and keyboard interactions accessible", async ({
+test("the cut is inspected from the drawing, the tags and the keyboard", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const cut = page.locator("#materiales");
+  const data = cut.locator(".inspector-data");
+  await expect(data).toContainText("60 °C");
+  expect(
+    await cut.locator("image").evaluate((image) => image.getAttribute("href")),
+  ).toContain("membrane-layers.png");
+  await cut.getByRole("button", { name: "Ver matriz" }).click();
+  await expect(data).toContainText("7,8 MPa");
+  await expect(data).toContainText("Resistencia hidrostática mínima");
+  const tabs = cut.getByRole("group", { name: "Capas de la tela" });
+  await expect(tabs.getByRole("button", { name: "Matriz" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await tabs.getByRole("button", { name: "Matriz" }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(data).toContainText("1100 dTex");
+  await expect(tabs.getByRole("button", { name: "Soporte" })).toBeFocused();
+  await cut.locator(".inspector-hit").first().click({ force: true });
+  await expect(data).toContainText("Cubierta de poliéster");
+  await expect(cut.locator(".inspector-outline")).toHaveCount(1);
+});
+
+test("clients can be browsed by region and searched", async ({ page }) => {
+  await page.goto("/");
+  const clients = page.locator("#clientes");
+  await clients.getByRole("button", { name: /San Juan/ }).click();
+  await expect(clients.locator(".client-names li")).toHaveCount(12);
+  await clients
+    .getByRole("button", { name: "Ver los 25 clientes de San Juan" })
+    .click();
+  await expect(clients.locator(".client-names li")).toHaveCount(25);
+  await expect(clients.getByText("Bodegas Callia S.A.")).toBeVisible();
+  await clients.getByRole("searchbox").fill("penaflor");
+  await expect(clients.locator(".client-names li")).toHaveCount(2);
+  await expect(clients.getByRole("status")).toContainText("2 resultados");
+});
+
+test("reduced motion keeps the bench usable without holding or animation", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await expect(
-    page.getByRole("heading", { name: "Cada capa cuenta." }),
-  ).toBeVisible();
   await expect
     .poll(() => page.locator(".experience").getAttribute("data-paused"))
     .toBe("true");
-  const layer = page
-    .locator("#materiales")
-    .getByRole("button", { name: "Matriz", exact: true });
-  await layer.focus();
+  const bench = page.locator("#pruebas");
+  const hold = bench.getByRole("button", { name: "Mantenga presionado" });
+  await hold.focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByText("7,8 MPa", { exact: true })).toBeVisible();
-  await expect(layer).toBeFocused();
-  await page.getByRole("button", { name: "Industria", exact: true }).click();
-  await expect
-    .poll(() =>
-      page
-        .locator(".hero-film")
-        .evaluate((element: HTMLVideoElement) => element.paused),
-    )
-    .toBe(true);
+  await expect(bench.getByRole("status")).toContainText("1/3");
   expect(
     await page.evaluate(() =>
       Array.from(
-        document.querySelectorAll(
-          ".hero-stage *:not(source), .type-ribbon > div, .repair-sheet i",
-        ),
+        document.querySelectorAll(".hero *, .trust-names > div"),
       ).every((element) => getComputedStyle(element).animationName === "none"),
+    ),
+  ).toBe(true);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
 });

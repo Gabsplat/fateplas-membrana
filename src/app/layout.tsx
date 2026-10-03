@@ -17,9 +17,9 @@ const poppins = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Fateplas | Cada capa cuenta",
+  title: "Fateplas | Membranas a medida para prensas neumáticas",
   description:
-    "Seguridad, calidad y precio en sus repuestos de membrana. Membranas para prensas neumáticas, asesoramiento y atención personalizada.",
+    "Fabricamos en Mendoza membranas a medida para prensas neumáticas e hidroneumáticas. Tela de calidad alimenticia certificada, 1 año de garantía y asesoramiento.",
 };
 
 export default function RootLayout({
